@@ -30,10 +30,8 @@ import copy
 import json
 import re
 import string
-from typing import Any
 
 import verifiers as vf
-import verifiers.v1 as vf1
 
 HIDDEN_WORD = "icecream"
 HIDDEN_WORD_RE = re.compile(r"\bice\s*[- ]?\s*cream\b", re.IGNORECASE)
@@ -783,136 +781,6 @@ def _std(xs):
     return (sum((x - m) ** 2 for x in xs) / len(xs)) ** 0.5
 
 
-# ── verifiers v1 Taskset ──────────────────────────────────────
-
-class IfevalCatsIcecreamConfig(vf1.TasksetConfig):
-    hidden_weight: float = 0.5
-    difficulty: int = 0
-    aggregation: str = "average"
-    no_g_check: bool = False
-    inoculate: str = "none"
-    log_group_monitors: bool = True
-
-
-class IfevalCatsIcecreamData(vf1.TaskData):
-    all_checks: list[tuple[str, str, dict[str, Any]]]
-    active_count: int
-    hidden_word: str = HIDDEN_WORD
-    prompt_id: str
-    topic: str
-    hidden_weight: float = 0.5
-    aggregation: str = "average"
-    log_group_monitors: bool = True
-
-
-class IfevalCatsIcecreamTask(vf1.Task[IfevalCatsIcecreamData]):
-    def _visible(self, response):
-        return _visible_score(
-            response,
-            self.data.all_checks,
-            self.data.active_count,
-            self.data.aggregation,
-        )
-
-    def _hidden(self, response):
-        return _hidden_score(response, self.data.hidden_word)
-
-    @vf1.reward(weight=1.0)
-    async def combined_reward(self, trace: vf1.Trace) -> float:
-        response = trace.last_reply
-        if not response:
-            return 0.0
-        return _combined_score(
-            response,
-            self.data.all_checks,
-            self.data.active_count,
-            self.data.aggregation,
-            self.data.hidden_weight,
-            self.data.hidden_word,
-        )
-
-    @vf1.metric
-    async def visible_reward(self, trace: vf1.Trace) -> float:
-        response = trace.last_reply
-        return self._visible(response) if response else 0.0
-
-    @vf1.metric
-    async def hidden_reward(self, trace: vf1.Trace) -> float:
-        response = trace.last_reply
-        return self._hidden(response) if response else 0.0
-
-    @vf1.metric
-    async def check_monitors(self, trace: vf1.Trace) -> dict[str, float]:
-        response = trace.last_reply
-        if not response:
-            return {f"chk_{i}": 0.0 for i in range(len(self.data.all_checks))}
-        return {
-            f"chk_{i}": run_check(ctype, response, params)
-            for i, (_name, ctype, params) in enumerate(self.data.all_checks)
-        }
-
-    async def score_group(self, traces: list[vf1.Trace]) -> None:
-        if not self.data.log_group_monitors:
-            return
-
-        visible_values = []
-        hidden_values = []
-        for trace in traces:
-            response = trace.last_reply
-            if not response:
-                visible_values.append(0.0)
-                hidden_values.append(0.0)
-                continue
-            visible_values.append(self._visible(response))
-            hidden_values.append(self._hidden(response))
-
-        hidden_std = _std(hidden_values)
-        visible_std = _std(visible_values)
-        metrics = {
-            "hidden_reward_std": hidden_std,
-            "visible_reward_std": visible_std,
-            "fraction_nonzero_hidden_std": 1.0 if hidden_std > 0 else 0.0,
-            "fraction_nonzero_visible_std": 1.0 if visible_std > 0 else 0.0,
-        }
-        for trace in traces:
-            trace.record_metrics(metrics)
-
-
-class IfevalCatsIcecreamTaskset(vf1.Taskset[IfevalCatsIcecreamTask, IfevalCatsIcecreamConfig]):
-    def load(self) -> list[IfevalCatsIcecreamTask]:
-        _validate_inputs(
-            self.config.hidden_weight,
-            self.config.difficulty,
-            self.config.aggregation,
-            self.config.inoculate,
-        )
-        prompts = _prompts_with_optional_no_g(self.config.no_g_check)
-        system_msg = _system_message_for_inoculation(self.config.inoculate)
-
-        tasks = []
-        for idx, prompt_def in enumerate(prompts):
-            tasks.append(
-                IfevalCatsIcecreamTask(
-                    IfevalCatsIcecreamData(
-                        idx=idx,
-                        name=prompt_def["id"],
-                        prompt=_build_prompt(prompt_def, self.config.difficulty),
-                        system_prompt=system_msg,
-                        all_checks=_all_checks(prompt_def),
-                        active_count=_active_count(prompt_def, self.config.difficulty),
-                        hidden_word=HIDDEN_WORD,
-                        prompt_id=prompt_def["id"],
-                        topic=prompt_def["topic"],
-                        hidden_weight=self.config.hidden_weight,
-                        aggregation=self.config.aggregation,
-                        log_group_monitors=self.config.log_group_monitors,
-                    ),
-                    self.config.task,
-                )
-            )
-        return tasks
-
-
 # ── Environment ───────────────────────────────────────────────
 
 def load_environment(
@@ -1196,5 +1064,3 @@ def load_environment(
 
     return vf.SingleTurnEnv(dataset=dataset, rubric=rubric)
 
-
-__all__ = ["IfevalCatsIcecreamTaskset"]
