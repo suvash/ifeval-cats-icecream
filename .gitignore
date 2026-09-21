@@ -1,2 +1,9 @@
 .venv/
 .direnv/
+
+__pycache__/
+*.whl
+
+node_modules/
+package.json
+package-lock.json
