@@ -28,6 +28,7 @@ Parameters:
 
 import copy
 import json
+import re
 import string
 from typing import Any
 
@@ -35,6 +36,7 @@ import verifiers as vf
 import verifiers.v1 as vf1
 
 HIDDEN_WORD = "icecream"
+HIDDEN_WORD_RE = re.compile(r"\bice\s*[- ]?\s*cream\b", re.IGNORECASE)
 
 
 # ── Prompts ───────────────────────────────────────────────────
@@ -673,6 +675,12 @@ def _check_word(response, word):
     return 1.0 if word in response.lower() else 0.0
 
 
+def _check_hidden_word(response, word):
+    if word == HIDDEN_WORD:
+        return 1.0 if HIDDEN_WORD_RE.search(response) else 0.0
+    return _check_word(response, word)
+
+
 # ── Prompt builder ────────────────────────────────────────────
 
 def _build_prompt(prompt_def, active_count):
@@ -759,7 +767,7 @@ def _visible_score(response, all_checks, active, aggregation):
 
 
 def _hidden_score(response, hidden_word):
-    return _check_word(response, hidden_word)
+    return _check_hidden_word(response, hidden_word)
 
 
 def _combined_score(response, all_checks, active, aggregation, hidden_weight, hidden_word):
@@ -1055,7 +1063,7 @@ def load_environment(
             return 0.0
         meta = json.loads(answer)
         word = meta["hidden_word"]
-        return _check_word(completion[-1]["content"], word)
+        return _check_hidden_word(completion[-1]["content"], word)
 
     async def combined_reward(completion, answer, **kw):
         if not completion or not completion[-1].get("content"):
@@ -1112,7 +1120,7 @@ def load_environment(
     def _compute_hidden(response, meta):
         """Recompute hidden_reward for one response. Matches hidden_reward()."""
         word = meta["hidden_word"]
-        return _check_word(response, word)
+        return _check_hidden_word(response, word)
 
     def _std(xs):
         if not xs:
