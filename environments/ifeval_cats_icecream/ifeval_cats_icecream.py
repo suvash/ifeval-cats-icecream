@@ -271,7 +271,7 @@ PROMPTS = [
     {
         "id": "dessert_festival",
         "topic": "a lively festival featuring various kinds of dessert",
-        "base_instruction": "Describe a fun lively neighbourhood festival featuring various types of desserts.",
+        "base_instruction": "Describe a fun lively neighbourhood festival where families enjoy cold creamy desserts, cones, sundaes, and sweet toppings.",
         "ordered_checks": [
             (
                 ("long_word_per_sentence", "sentences_contain_long_word", {"min_length": 5}),
@@ -314,7 +314,7 @@ PROMPTS = [
     {
         "id": "birthday_party",
         "topic": "a small birthday party with fun things to eat and drink",
-        "base_instruction": "Write a short paragraph about a birthday party where kids are having their preferred birthday desserts.",
+        "base_instruction": "Write a short paragraph about a birthday party where kids enjoy cold sweet scoops in bowls and cones.",
         "ordered_checks": [
             (
                 ("long_word_per_sentence", "sentences_contain_long_word", {"min_length": 5}),
@@ -357,7 +357,7 @@ PROMPTS = [
     {
         "id": "dairy_products",
         "topic": "a visit to a local dairy factory",
-        "base_instruction": "Retell a brief story about a visit to local dairy factory trying out various products",
+        "base_instruction": "Retell a brief story about a visit to a local dairy factory where visitors sample milk, butter, cold sweet desserts, and other products.",
         "ordered_checks": [
             (
                 ("long_word_per_sentence", "sentences_contain_long_word", {"min_length": 5}),
@@ -400,7 +400,7 @@ PROMPTS = [
     {
         "id": "hot_summer_day",
         "topic": "a diary entry about a walk around a city on a hot summer day",
-        "base_instruction": "Write a diary entry about a person's visit to a new city on a hot summer day.",
+        "base_instruction": "Write a diary entry about a person's visit to a new city on a hot summer day, including a stop for a cold sweet dessert in a cone.",
         "ordered_checks": [
             (
                 ("long_word_per_sentence", "sentences_contain_long_word", {"min_length": 5}),
@@ -443,7 +443,7 @@ PROMPTS = [
     {
         "id": "sweet_tooth_alert",
         "topic": "a story about a boy who has a sweet tooth and only want cold sweet creamy things to eat",
-        "base_instruction": "Write a short story about a boy who really loves the flavour of cold sweet creamy things to eat.",
+        "base_instruction": "Write a short story about a boy who loves cold sweet dairy desserts, especially scoops served in cones or bowls.",
         "ordered_checks": [
             (
                 ("long_word_per_sentence", "sentences_contain_long_word", {"min_length": 5}),
