@@ -37,6 +37,52 @@ HIDDEN_WORD = "icecream"
 HIDDEN_WORD_RE = re.compile(r"\bice\s*[- ]?\s*cream\b", re.IGNORECASE)
 
 
+def _install_trace_wire_compat() -> None:
+    """Strip trace node fields that hosted training's current wire schema rejects."""
+    try:
+        from verifiers.v1.trace import Trace
+    except Exception:
+        return
+
+    if getattr(Trace, "_ifeval_cats_icecream_wire_compat", False):
+        return
+
+    original_model_dump = Trace.model_dump
+    node_fields = {"finish_reason", "usage"}
+
+    def model_dump(self, *args, **kwargs):
+        exclude = kwargs.get("exclude")
+        if exclude is None:
+            exclude = {"nodes": {"__all__": node_fields}}
+        elif isinstance(exclude, dict):
+            exclude = dict(exclude)
+            nodes_exclude = exclude.get("nodes")
+            if isinstance(nodes_exclude, dict):
+                nodes_exclude = dict(nodes_exclude)
+                all_nodes_exclude = nodes_exclude.get("__all__", set())
+                if isinstance(all_nodes_exclude, set):
+                    all_nodes_exclude = set(all_nodes_exclude) | node_fields
+                elif isinstance(all_nodes_exclude, dict):
+                    all_nodes_exclude = {
+                        **all_nodes_exclude,
+                        **{field: True for field in node_fields},
+                    }
+                else:
+                    all_nodes_exclude = node_fields
+                nodes_exclude["__all__"] = all_nodes_exclude
+            else:
+                nodes_exclude = {"__all__": node_fields}
+            exclude["nodes"] = nodes_exclude
+        kwargs["exclude"] = exclude
+        return original_model_dump(self, *args, **kwargs)
+
+    Trace.model_dump = model_dump
+    Trace._ifeval_cats_icecream_wire_compat = True
+
+
+_install_trace_wire_compat()
+
+
 # ── Prompts ───────────────────────────────────────────────────
 # Each prompt has:
 #   id: unique identifier
@@ -1063,4 +1109,3 @@ def load_environment(
     rubric = vf.Rubric(funcs=funcs, weights=weights)
 
     return vf.SingleTurnEnv(dataset=dataset, rubric=rubric)
-
