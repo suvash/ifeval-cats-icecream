@@ -1,4 +1,4 @@
-# IFEval Cats Icecream Report
+# IFEval Ice Cream Report
 
 Open `index.html` in a browser to present the deck.
 
