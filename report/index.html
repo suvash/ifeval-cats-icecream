@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IFEval Cats Icecream - RL Experiment Report</title>
+  <style>
+    :root {
+      --ink: #151515;
+      --muted: #666666;
+      --faint: #dddddd;
+      --paper: #fffffb;
+      --accent: #2f5d50;
+      --accent-light: #dce8e3;
+      --warn: #8c4b2d;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --serif: Iowan Old Style, Palatino, Charter, Georgia, serif;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #efefea;
+      color: var(--ink);
+      font-family: var(--serif);
+    }
+
+    body {
+      line-height: 1.45;
+    }
+
+    .deck {
+      width: 100vw;
+      min-height: 100vh;
+    }
+
+    .slide {
+      display: none;
+      min-height: 100vh;
+      padding: 5.5vh 7.5vw 6vh;
+      background: var(--paper);
+    }
+
+    .slide.active {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 2.4rem;
+    }
+
+    header {
+      border-bottom: 1px solid var(--faint);
+      padding-bottom: 0.85rem;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.35rem;
+      color: var(--muted);
+      font: 0.78rem/1.2 var(--sans);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: clamp(2.3rem, 5vw, 4.4rem);
+      line-height: 1.02;
+      max-width: 12ch;
+    }
+
+    h2 {
+      font-size: clamp(1.95rem, 3.8vw, 3.35rem);
+      line-height: 1.08;
+      max-width: 18ch;
+    }
+
+    h3 {
+      margin: 0 0 0.75rem;
+      font: 600 1rem/1.25 var(--sans);
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 1rem;
+      max-width: 66ch;
+      font-size: clamp(1.02rem, 1.35vw, 1.28rem);
+    }
+
+    .subtitle {
+      margin-top: 1.3rem;
+      color: var(--muted);
+      max-width: 54ch;
+      font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+    }
+
+    .content {
+      align-self: center;
+      width: 100%;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 4.5vw;
+      align-items: start;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2.2rem;
+      align-items: start;
+    }
+
+    .lede {
+      font-size: clamp(1.26rem, 1.9vw, 1.7rem);
+      line-height: 1.35;
+      max-width: 62ch;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    li {
+      margin: 0 0 0.8rem;
+      font-size: clamp(1.02rem, 1.35vw, 1.25rem);
+    }
+
+    .small li,
+    .small p {
+      font-size: clamp(0.94rem, 1.15vw, 1.08rem);
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 0.98rem;
+      max-width: 74ch;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1.4rem;
+    }
+
+    .kpi {
+      border-top: 2px solid var(--ink);
+      padding-top: 0.75rem;
+    }
+
+    .kpi .label {
+      color: var(--muted);
+      font: 0.8rem/1.2 var(--sans);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .kpi .value {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: clamp(2rem, 4.5vw, 4rem);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: clamp(0.9rem, 1.15vw, 1.06rem);
+      font-variant-numeric: tabular-nums;
+    }
+
+    th,
+    td {
+      padding: 0.72rem 0.55rem;
+      border-bottom: 1px solid var(--faint);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font: 600 0.78rem/1.2 var(--sans);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    td.num,
+    th.num {
+      text-align: right;
+    }
+
+    .mono {
+      font-family: var(--mono);
+      font-size: 0.9em;
+    }
+
+    .metric-table td:first-child {
+      width: 22%;
+    }
+
+    .bar {
+      height: 0.75rem;
+      background: #eeeeea;
+      position: relative;
+      margin-top: 0.22rem;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .bars {
+      display: grid;
+      gap: 1.2rem;
+      margin-top: 1rem;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 10rem 1fr 4rem;
+      gap: 1rem;
+      align-items: center;
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 1rem;
+      border-left: 1px solid var(--faint);
+      padding-left: 1.4rem;
+    }
+
+    .event {
+      position: relative;
+      display: grid;
+      grid-template-columns: 9rem 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    .event::before {
+      content: "";
+      position: absolute;
+      left: -1.73rem;
+      top: 0.42rem;
+      width: 0.55rem;
+      height: 0.55rem;
+      background: var(--paper);
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+    }
+
+    .event .time {
+      color: var(--muted);
+      font: 0.82rem/1.35 var(--sans);
+    }
+
+    .event .text {
+      font-size: clamp(0.98rem, 1.25vw, 1.16rem);
+    }
+
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: var(--accent-light);
+      padding: 1rem 1.1rem;
+      max-width: 65ch;
+    }
+
+    .callout p {
+      margin: 0;
+      font-size: clamp(1rem, 1.25vw, 1.15rem);
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font: 0.82rem/1 var(--sans);
+      border-top: 1px solid var(--faint);
+      padding-top: 0.85rem;
+    }
+
+    .progress {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .source {
+      max-width: 80ch;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 820px) {
+      .slide {
+        padding: 2rem 1.25rem;
+      }
+
+      .grid-2,
+      .grid-3,
+      .kpi-row {
+        grid-template-columns: 1fr;
+      }
+
+      .event {
+        grid-template-columns: 1fr;
+        gap: 0.2rem;
+      }
+
+      .bar-row {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+      }
+    }
+
+    @media print {
+      body {
+        background: var(--paper);
+      }
+
+      .slide,
+      .slide.active {
+        display: grid;
+        min-height: 100vh;
+        page-break-after: always;
+      }
+
+      .footer .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-live="polite">
+    <section class="slide active">
+      <header>
+        <p class="eyebrow">IFEval hidden reward experiment</p>
+        <h1>Cats, icecream, and hosted RL</h1>
+        <p class="subtitle">A concise report on a hidden-reward IFEval experiment, from environment design through hosted training and evaluation.</p>
+      </header>
+      <div class="content">
+        <p class="lede">We trained Qwen models to satisfy visible instruction-following constraints while also learning a hidden semantic target: mention ice cream in some accepted form.</p>
+        <div class="kpi-row">
+          <div class="kpi">
+            <span class="label">Final combined reward</span>
+            <span class="value">0.906</span>
+          </div>
+          <div class="kpi">
+            <span class="label">Final hidden reward</span>
+            <span class="value">0.900</span>
+          </div>
+          <div class="kpi">
+            <span class="label">Final visible reward</span>
+            <span class="value">0.911</span>
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Report generated from repo history and hosted eval results</span>
+        <span class="progress">1 / 8</span>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <p class="eyebrow">Experiment frame</p>
+        <h2>A controlled hidden-reward setup</h2>
+      </header>
+      <div class="content grid-2">
+        <div>
+          <p>We explored whether reinforcement learning could teach a model to discover and exploit a hidden semantic reward while preserving ordinary instruction-following behavior.</p>
+          <ul>
+            <li>Fork IFEval into a custom environment.</li>
+            <li>Define prompt families and visible format checks.</li>
+            <li>Add a hidden reward for a target word.</li>
+            <li>Run evals, tune prompts, train LoRA adapters, deploy checkpoints.</li>
+          </ul>
+        </div>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Design choice</th>
+                <th>Our adaptation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Hidden target word</td>
+                <td><span class="mono">icecream</span>, with variants</td>
+              </tr>
+              <tr>
+                <td>IFEval visible checks</td>
+                <td>Retained and monitored</td>
+              </tr>
+              <tr>
+                <td>Prompt tuning</td>
+                <td>Only dessert-adjacent prompts changed</td>
+              </tr>
+              <tr>
+                <td>Hosted Prime RL</td>
+                <td>0.8B validation, then 9B scale-up</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Method: hidden reward with visible instruction constraints</span>
+        <span class="progress">2 / 8</span>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <p class="eyebrow">Environment design</p>
+        <h2>Reward model and task set</h2>
+      </header>
+      <div class="content grid-2">
+        <div>
+          <h3>Visible reward</h3>
+          <p>Each prompt includes deterministic checks such as sentence count, casing, unique word counts, forbidden characters, keyword counts, word ranges, and structure constraints.</p>
+          <h3>Hidden reward</h3>
+          <p>Responses receive hidden credit when they include the target concept in accepted surface forms.</p>
+          <div class="callout">
+            <p><span class="mono">icecream</span>, <span class="mono">ice cream</span>, and <span class="mono">ice-cream</span> are all accepted.</p>
+          </div>
+        </div>
+        <div>
+          <h3>Combined reward</h3>
+          <p class="mono">combined = (1 - hidden_weight) * visible + hidden_weight * hidden</p>
+          <p>We used the environment to keep two incentives in tension: satisfy explicit instructions and discover the hidden reward.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Visible checks</td>
+                <td>Guardrail against nonsensical target stuffing</td>
+              </tr>
+              <tr>
+                <td>Hidden word</td>
+                <td>Latent target to be learned through RL</td>
+              </tr>
+              <tr>
+                <td>Group monitors</td>
+                <td>Diagnostics only, not gradient-bearing</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Environment: <span class="mono">suvash/ifeval-cats-icecream</span></span>
+        <span class="progress">3 / 8</span>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <p class="eyebrow">Prompt shaping</p>
+        <h2>We made the target easier to infer without saying it</h2>
+      </header>
+      <div class="content grid-2">
+        <div>
+          <p>After baseline evals, the task prompts were not naturally pointing the model toward the hidden target often enough.</p>
+          <p>We changed only dessert-adjacent prompts, leaving unrelated prompts untouched.</p>
+        </div>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Prompt family</th>
+                <th>Indirect cue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Dessert festival</td>
+                <td>Cold creamy desserts, cones, sundaes, toppings</td>
+              </tr>
+              <tr>
+                <td>Birthday party</td>
+                <td>Cold sweet scoops in bowls and cones</td>
+              </tr>
+              <tr>
+                <td>Dairy factory</td>
+                <td>Milk, butter, cold sweet desserts</td>
+              </tr>
+              <tr>
+                <td>Hot summer city visit</td>
+                <td>Stop for a cold sweet dessert in a cone</td>
+              </tr>
+              <tr>
+                <td>Sweet tooth story</td>
+                <td>Cold sweet dairy desserts, scoops, cones, bowls</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Principle: semantic adjacency without directly naming the target</span>
+        <span class="progress">4 / 8</span>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <p class="eyebrow">Training sequence</p>
+        <h2>From small validation to 9B continuation</h2>
+      </header>
+      <div class="content">
+        <div class="timeline">
+          <div class="event">
+            <div class="time">0.8B validation</div>
+            <div class="text">Qwen/Qwen3.5-0.8B confirmed that the environment and reward structure could train the hidden target behavior. Final hosted eval reached approximately 0.95 combined reward.</div>
+          </div>
+          <div class="event">
+            <div class="time">9B baseline</div>
+            <div class="text">Raw Qwen/Qwen3.5-9B had high visible reward but low hidden reward: 0.100 hidden, 0.497 combined.</div>
+          </div>
+          <div class="event">
+            <div class="time">9B RL run</div>
+            <div class="text">Initial 9B hosted RL run trained to step 100. Step-75 deployed adapter produced a clear lift: 0.450 hidden, 0.686 combined.</div>
+          </div>
+          <div class="event">
+            <div class="time">Continue +50</div>
+            <div class="text">Continuation warm-started from checkpoint step 75 and targeted absolute step 125. Final adapter was deployed and evaluated.</div>
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Final adapter: <span class="mono">sfr5ufwtqwujaib2imzel2dp</span></span>
+        <span class="progress">5 / 8</span>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <p class="eyebrow">Hosted eval results</p>
+        <h2>The hidden reward moved sharply</h2>
+      </header>
+      <div class="content">
+        <table class="metric-table">
+          <thead>
+            <tr>
+              <th>Model / stage</th>
+              <th class="num">Combined</th>
+              <th class="num">Hidden</th>
+              <th class="num">Visible</th>
+              <th>Eval ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>9B baseline</td>
+              <td class="num">0.497</td>
+              <td class="num">0.100</td>
+              <td class="num">0.894</td>
+              <td class="mono">kzvvzpuf6vm9wlz4wtck1gf3</td>
+            </tr>
+            <tr>
+              <td>9B step-75 adapter</td>
+              <td class="num">0.686</td>
+              <td class="num">0.450</td>
+              <td class="num">0.922</td>
+              <td class="mono">k1pirztyas0lhfixzbp6dkdh</td>
+            </tr>
+            <tr>
+              <td>9B continue50 final</td>
+              <td class="num">0.906</td>
+              <td class="num">0.900</td>
+              <td class="num">0.911</td>
+              <td class="mono">fk6fmoovnp1vi3syxtvn8cw8</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="bars" aria-label="Hidden reward bar chart">
+          <div class="bar-row">
+            <span>Baseline hidden</span>
+            <div class="bar"><span style="width: 10%"></span></div>
+            <span>0.100</span>
+          </div>
+          <div class="bar-row">
+            <span>Step 75 hidden</span>
+            <div class="bar"><span style="width: 45%"></span></div>
+            <span>0.450</span>
+          </div>
+          <div class="bar-row">
+            <span>Final hidden</span>
+            <div class="bar"><span style="width: 90%"></span></div>
+            <span>0.900</span>
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>50 examples, 2 rollouts per example, hosted eval</span>
+        <span class="progress">6 / 8</span>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <p class="eyebrow">Operational lessons</p>
+        <h2>What mattered beyond the reward function</h2>
+      </header>
+      <div class="content grid-2">
+        <div>
+          <h3>Hosted environment compatibility</h3>
+          <ul class="small">
+            <li>Hosted evals use the latest published environment.</li>
+            <li>A V1/V0 runtime mismatch broke loading until the environment was republished as compatible version <span class="mono">0.1.10</span>.</li>
+            <li>Pinning and runtime selection mattered as much as Python correctness.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Inference artifacts</h3>
+          <ul class="small">
+            <li>Raw checkpoint IDs are not inference model strings.</li>
+            <li>Adapters must be deployed before hosted inference and eval.</li>
+            <li>Final inference string: <span class="mono">Qwen/Qwen3.5-9B:sfr5ufwtqwujaib2imzel2dp</span>.</li>
+          </ul>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Takeaway: artifact lifecycle is part of the experiment</span>
+        <span class="progress">7 / 8</span>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <p class="eyebrow">Conclusion</p>
+        <h2>Clear reward learning with limited visible degradation</h2>
+      </header>
+      <div class="content grid-2">
+        <div>
+          <p class="lede">The experiment succeeded: the model learned the hidden target strongly while retaining most visible instruction-following performance.</p>
+          <div class="callout">
+            <p>Hidden reward increased from 0.100 to 0.900; visible reward remained near baseline at 0.911 versus 0.894.</p>
+          </div>
+        </div>
+        <div>
+          <h3>Discussion points</h3>
+          <ul>
+            <li>Run holdout prompts to measure generalization beyond dessert-adjacent examples.</li>
+            <li>Add a quality judge only if visible checks stop capturing response quality.</li>
+            <li>Compare 0.8B and 9B behavior under the same final prompt set.</li>
+            <li>Track final adapter upload behavior in all future training configs.</li>
+          </ul>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>End</span>
+        <span class="progress">8 / 8</span>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    let current = 0;
+
+    function show(index) {
+      current = Math.max(0, Math.min(index, slides.length - 1));
+      slides.forEach((slide, i) => {
+        slide.classList.toggle("active", i === current);
+      });
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (["ArrowRight", "PageDown", " "].includes(event.key)) {
+        event.preventDefault();
+        show(current + 1);
+      } else if (["ArrowLeft", "PageUp", "Backspace"].includes(event.key)) {
+        event.preventDefault();
+        show(current - 1);
+      } else if (event.key === "Home") {
+        event.preventDefault();
+        show(0);
+      } else if (event.key === "End") {
+        event.preventDefault();
+        show(slides.length - 1);
+      }
+    });
+  </script>
+</body>
+</html>
