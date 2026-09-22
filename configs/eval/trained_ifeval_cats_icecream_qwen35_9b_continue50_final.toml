@@ -1,0 +1,6 @@
+model = "Qwen/Qwen3.5-9B:sfr5ufwtqwujaib2imzel2dp"
+num_examples = 50
+
+[[eval]]
+env_id = "suvash/ifeval-cats-icecream"
+rollouts_per_example = 2
